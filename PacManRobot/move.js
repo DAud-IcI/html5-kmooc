@@ -21,17 +21,17 @@ function max(arr) { return Math.max.apply(null, arr); };
 function sort(arr) { return jQuery(arr).sort().toArray(); }
 function shuffle(arr)
 {
-    var ret = [], len = arr.length, tmp;
+    var len = arr.length, tmp;
 
     while (len > 0)
     {
         i = Math.floor(Math.random() * len--);
-        tmp = ret[len];
-        ret[len] = ret[i];
-        ret[i] = tmp;
+        tmp = arr[len];
+        arr[len] = arr[i];
+        arr[i] = tmp;
     }
 
-  return ret;
+  return arr;
 }
 
 var avoidance = {};
@@ -96,7 +96,7 @@ function flight(x, y, monster_potential)
             for (var j = 0; j < 4; j++)
             {
                 var d = shuffled_directions[j];
-                if (monster_potential[d] == least_danger && NO_GO.indexOf(peek(x, y,d)) < 0)
+                if (monster_potential[d] == least_danger && NO_GO.indexOf(peek(x, y,d, 1)) < 0)
                     return d; 
             }
 
@@ -156,6 +156,8 @@ function displaceCoordinates(x, y, direction, distance)
 
 function checkCell(x,y)
 {
+    if (map[y] === undefined)
+        qwe = 1; // for testing
     var cell = jQuery(map[y][x]);
     var cell_text = cell.text();
 
