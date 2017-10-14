@@ -1,0 +1,35 @@
+.field{
+    display: block;
+    float:left;
+    background-color: #F44336;
+}
+.blue{
+    display: block;
+    float:left;
+    background-color: #2196F3;
+}
+.map9{
+    display: block;
+    float:left;
+    
+background-color:black;
+}
+.green{
+    display: block;
+    float:left;
+    background-color: #4CAF50;
+}
+.msg{font-size: xx-large;}
+.m0, .m1, .m2, .m3, .m4{
+    display: block;
+    float:left;
+    background-color: #FFEB3B;                
+}
+#log,#tabella{
+    max-height: 600px;
+    overflow: scroll;
+    display: block;
+    font-family: monospace;
+    max-width: 80%;
+    float:right;
+}
