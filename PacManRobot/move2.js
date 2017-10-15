@@ -1,4 +1,5 @@
-var o7h8ae, O7H8AE;
+var o7h8ae;
+var normal, evolved;
 
 var evolution = ("create_specimen" in window) ? window.create_specimen : false;
 
@@ -153,7 +154,8 @@ var evolution = ("create_specimen" in window) ? window.create_specimen : false;
     
         function evaluatePath(current, origin, exclude_direction, distance)
         {
-            var dist_mod = NEARBY_PREFER / (distance + 1);
+            distance++;
+            var dist_mod = NEARBY_PREFER / distance;
     
             var cell_type = checkCell(current.x, current.y);
             if (cell_type == CELL_MONSTER)
@@ -166,7 +168,7 @@ var evolution = ("create_specimen" in window) ? window.create_specimen : false;
             if (distance < MAX_PEEK)
                 for (var i = 0; i < curr.neighbours.length; i++)
                     if (getDirection(current, curr.neighbours[i]) != exclude_direction)
-                        value += evaluatePath(curr.neighbours[i], origin, exclude_direction, distance + 1);
+                        value += evaluatePath(curr.neighbours[i], origin, exclude_direction, distance);
             
             return value;
         }
@@ -216,176 +218,10 @@ var evolution = ("create_specimen" in window) ? window.create_specimen : false;
             };
     }
 
-    o7h8ae = O7H8AE = createRobot().behaviour;
+    // these options are generated using evolve.html
+    var evolved_options = {"MAX_PEEK":5,"PELLET_SEEK":0.9983282622979917,"NEARBY_PREFER":3.6251452745704724,"MONSTER_AVOID":15.05271006059996,"PLAYER_AVOID":3.7465742141517238,"BACKTRACK_AVOID":11.187344876724499};
 
-    if (!evolution) return;
-
-    var specimen = [];
-    for (var i = 0; i < 100; i++)
-    {
-        var options = {
-            MAX_PEEK        : Math.floor(Math.random() * 19) + 1,
-            PELLET_SEEK     : Math.random() * 100,
-            NEARBY_PREFER   : Math.random() * 100,
-            MONSTER_AVOID   : Math.random() * 300,
-            PLAYER_AVOID    : Math.random() * 100,
-            BACKTRACK_AVOID : Math.random() * 200,
-        };
-
-        specimen.push(createRobot(options));
-    }
-
-    function exposePopulation(specimen)
-    {
-        for (var i = 0; i < specimen.length; i++)
-            window['s' + i] = specimen[i].behaviour;
-    }
-
-    function repopulate()
-    {
-        var winners = specimen.sort(function(a,b) { return b.fitness - a.fitness }); // selection: the top 5% based on fitness
-        specimen = [];
-
-        for (var alpha = 0; alpha < 4; alpha++)
-        {
-            for (var beta = alpha + 1; beta < 5; beta++)
-            {
-                // mating : everyone with everyone 10 times => 100 specimen for the next generation
-                var a = winners[alpha], b = winners[beta];
-                for(var i = 0; i < 10; i++)
-                {
-                    var new_genes = {};
-                    for (var gene in a.genes)
-                    {
-                        var percent = Math.random() * 20 + 50;
-                        new_genes[gene] = a.genes[gene] * percent + b.genes[gene] * (100 - percent) / 200; // gene flow: towards the mean with random 0-20% bias for the dominant partner
-                        new_genes[gene] += new_genes * (Math.random() * 0.1 - 0.05); // ±5% random mutation
-                    }
-                    specimen.push(createRobot(new_genes));
-                }
-            }
-        }
-
-        shuffle(specimen);
-        
-        evolution = { specimen : specimen, cycle : evolution.cycle + 1 };
-        exposePopulation(specimen);
-    }
-
-    function moveSimulate(name, x, y, walk, map)
-    {
-        var coords = displaceCoordinates(x, y, walk);
-        if (checkCell(coords.x, coords.y) == CELL_WALL) return { x: x, y: y };
-
-        jQuery(map[y][x])
-            .addClass('field')
-            .removeClass(name);
-        var next = jQuery(map[coords.y][coords.x])
-            .addClass(name)
-            .removeClass('field');
-        
-        var blue = next.hasClass('blue');
-        var green = next.hasClass('green');
-        var has_monster = next[0]
-            .className
-            .split(' ')
-            .filter(function(x) { return monsters.indexOf(x) >= 0; })
-            .length > 0
-            ;
-        if (blue || green)
-        {
-            if (has_monster)
-            {
-                if (blue)
-                {
-                    window.players.blue.state = false;
-                    next.removeClass('blue');
-                }
-                else
-                {
-                    window.players.green.state = false;
-                    next.removeClass('green');
-                }
-            }
-            else if (next.text().indexOf(1) >= 0)
-            {
-                next.text('');
-                var index = players[blue ? 'blue' : 'green'].name.replace('s','');
-                specimen[parseInt(index)].fitness++;
-            }
-        }
-        return coords;
-    }
-
-    evolution = { specimen : specimen, cycle : 0 };
-    exposePopulation(specimen);
-
-    var monsters = 'm0 m1 m2 m3 m4'.split(' ');
-    jQuery(function()
-    {
-        var TIMER_STEP = 50;
-        var evolve = jQuery('<button id="evolve">evolve!</button>');
-        jQuery('#start').after(evolve);
-        evolve.click(function()
-        {
-            parseMap("map");
-            window.simulate = true;
-            // simulate games
-            var log = document.getElementById('log');
-            log.textContent = JSON.stringify(specimen.genes);
-
-            for(var p1 = 0; p1 < 1; p1++)
-            {
-                for (var p2 = p1 + 1; p2 < 2; p2++)
-                {
-                    log.textContent += '\n\nASSIGN PLAYERS: s' + p1 + ' vs s' + (p2) + '\n';
-                    
-                    var players = window.players;
-                    players.blue  = { name: 's' + p1, x: 1, y: 1, sleep: 100, state: true, score: 0, move: window['s' + p1] };
-                    players.green = { name: 's' + (p2), x: map[map.length - 2].length - 2, y: map.length - 2, sleep: 100, state: true, score: 0, move: window['s' + (p2)] };
-        
-                    (function (map, players)
-                    {
-                        for (var cy = 0; cy < map.length; cy++)
-                            for (var cx = 0; cx < map[cy].length; cx++)
-                            {
-                                if (map[cy][cx] == 0) map[cy][cx] = 1;
-                                jQuery('#m' + cx + '_' + cy)
-                                    .text(map[cy][cx])
-                                    .attr('class', 'map' + map[cy][cx] + ' field')
-                                    ;
-                            }
-                
-                        players["m0"].x = 14; players["m0"].y = 14;
-                        players["m1"].x = 14; players["m1"].y = 15;
-                        players["m2"].x = 15; players["m2"].y = 15;
-                        players["m3"].x = 13; players["m3"].y = 14;
-                        players["m4"].x = 14; players["m4"].y = 13;
-                
-                        for (x in players)
-                        {
-                            $("#m" + players[x].x + "_" + players[x].y).removeClass("field");
-                            $("#m" + players[x].x + "_" + players[x].y).addClass(x);
-                            //players[x].move(x, players[x].x, players[x].y, "map");
-                        }
-                    })(window.map, window.players);
-        
-                    for(var i = 0; i < 60000; i += TIMER_STEP)
-                        Object.keys(players).forEach(function(entity) {
-                            var player = players[entity];
-                            if (!player.state || i % player.sleep !== 0) return;
-                            var walk = (entity == "green" || entity == "blue") ?
-                                player.move(entity, player.x, player.y, "map", true) :
-                                Math.floor(Math.random() * 4);
-                            var coords = moveSimulate(entity, player.x, player.y, walk, map);
-                            player.x = coords.x;
-                            player.y = coords.y;
-                        });
-                    log.textContent += '\n\ns' + p1 + ': ' + specimen[p1].fitness +
-                        ' s' + p2 + ': ' + specimen[p2].fitness + '\n';
-                }
-            }
-            window.simulate = false;
-        })
-    });
+    normal  = createRobot(evolved_options).behaviour;
+    evolved = createRobot(evolved_options).behaviour;
+    o7h8ae = evolved;
 })();
