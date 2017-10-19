@@ -1,8 +1,6 @@
 var o7h8ae;
 var normal, evolved;
 
-var evolution = ("create_specimen" in window) ? window.create_specimen : false;
-
 (function()
 {
     // constants
@@ -223,5 +221,5 @@ var evolution = ("create_specimen" in window) ? window.create_specimen : false;
 
     normal  = createRobot(evolved_options).behaviour;
     evolved = createRobot(evolved_options).behaviour;
-    o7h8ae = evolved;
+    o7h8ae  = evolved;
 })();
